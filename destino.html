@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Monitoramento Dinâmico</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; max-width: 600px; margin: 60px auto; padding: 0 20px; color: #333; background-color: #f4f6f9; }
+        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); text-align: center; }
+        h1 { font-size: 1.5em; color: #2c3e50; margin-bottom: 25px; }
+        .data-field { margin: 20px 0; padding: 15px; background: #fafafa; border-radius: 6px; border: 1px solid #e1e8ed; }
+        .label { font-size: 0.85em; text-transform: uppercase; color: #7f8c8d; font-weight: 600; letter-spacing: 1px; }
+        .value { font-size: 1.25em; color: #2980b9; font-weight: bold; margin-top: 5px; }
+        .status { font-size: 0.9em; color: #27ae60; margin-top: 20px; font-weight: 500; }
+        .loading { color: #e67e22; font-style: italic; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Resultado do Scraping (Via n8n)</h1>
+        
+        <div class="data-field">
+            <div class="label">Nome Capturado</div>
+            <div class="value" id="nome-atleta">-</div>
+        </div>
+
+        <div class="data-field">
+            <div class="label">Data Identificada</div>
+            <div class="value" id="data-capturada">-</div>
+        </div>
+
+        <p id="status-conexao" class="status loading">Aguardando dados do pipeline do n8n...</p>
+    </div>
+
+    <script>
+        // CONFIGURAÇÃO: Substitua a URL abaixo pela URL do nó Webhook do seu n8n quando ele estiver ativo
+        const N8N_WEBHOOK_URL = 'https://SUA_URL_DO_N8N.com/webhook/resultado-scraping';
+
+        async function buscarDadosDoN8n() {
+            try {
+                const resposta = await fetch(N8N_WEBHOOK_URL);
+                if (!resposta.ok) {
+                    throw new Error('Erro na requisição ao n8n');
+                }
+                
+                const json = await resposta.json();
+                
+                // Mapeia os dados do JSON recebido para os elementos HTML da tela
+                // Espera um JSON no formato: { "nome": "Alan Turing", "data": "04 de setembro de 1939" }
+                document.getElementById('nome-atleta').innerText = json.nome || 'Não encontrado';
+                document.getElementById('data-capturada').innerText = json.data || 'Não encontrada';
+                
+                // Atualiza o status
+                const statusEl = document.getElementById('status-conexao');
+                statusEl.innerText = 'Dados atualizados com sucesso via n8n!';
+                statusEl.className = 'status';
+                statusEl.style.color = '#27ae60';
+
+            } catch (erro) {
+                console.error('Erro ao buscar dados:', erro);
+                const statusEl = document.getElementById('status-conexao');
+                statusEl.innerText = 'Erro ao conectar com o n8n ou dados ainda não disponíveis.';
+                statusEl.style.color = '#c0392b';
+                statusEl.className = 'status';
+            }
+        }
+
+        // Executa a busca assim que a página carregar
+        window.addEventListener('DOMContentLoaded', buscarDadosDoN8n);
+    </script>
+</body>
+</html>
